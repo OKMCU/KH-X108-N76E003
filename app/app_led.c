@@ -56,14 +56,14 @@ void appLedOff(LED_t led)
 {
     halLedOff((HAL_LED_t)led);
 }
-//void appLedToggle(LED_t led)
-//{
-//    halLedToggle((HAL_LED_t)led);
-//}
-//LED_STATE_t appLedState(LED_t led)
-//{
-//    return halLedState((HAL_LED_t)led);
-//}
+void appLedToggle(LED_t led)
+{
+    halLedToggle((HAL_LED_t)led);
+}
+LED_STATE_t appLedState(LED_t led)
+{
+    return halLedState((HAL_LED_t)led);
+}
 
 #endif /* APP_LED_EN */
 

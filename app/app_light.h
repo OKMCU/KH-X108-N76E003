@@ -1,9 +1,9 @@
 /**
   ******************************************************************************
-  * @file    app_led.h
+  * @file    app_light.h
   * @author  SUN Wentao
   * @version V0.0.1
-  * @date    19-SEP-2017
+  * @date    08-OCT-2017
   * @brief   
    ******************************************************************************
   * @attention
@@ -26,8 +26,8 @@
   */ 
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __APP_LED_H
-#define __APP_LED_H
+#ifndef __APP_LIGHT_H
+#define __APP_LIGHT_H
 
 /* Includes ------------------------------------------------------------------*/
 #include "..\bsp\stdint.h"
@@ -35,32 +35,28 @@
 #include "firmware_conf.h"
 
 
-#if APP_LED_EN > 0
+#if APP_LIGHT_EN > 0
 /* Exported types ------------------------------------------------------------*/
-typedef enum {
-    LED_FUNC = 0,
-    LED_R = 1,
-    LED_G = 2,
-    LED_B = 3
-} LED_t;
-
-typedef enum {
-    LED_STATE_OFF = 0,
-    LED_STATE_ON = !LED_STATE_OFF
-} LED_STATE_t;
+typedef struct {
+    uint8_t red;
+    uint8_t green;
+    uint8_t blue;
+} APP_LIGHT_COLOR_t;
 /* Exported constants --------------------------------------------------------*/
+typedef enum {
+    APP_LIGHT_R = 0,
+    APP_LIGHT_G,
+    APP_LIGHT_B
+} APP_LIGHT_t;
 /* Exported macro ------------------------------------------------------------*/
+#define COLOR_TABLE_SEL_SIZE  6
 /* Exported functions ------------------------------------------------------- */
-void appLedInit(void);
-void appLedOn(LED_t led);
-void appLedOff(LED_t led);
-void appLedToggle(LED_t led);
-LED_STATE_t appLedState(LED_t led);
+void appLightSet(const APP_LIGHT_COLOR_t *color);
+void appLightSetMode(uint8_t lightMode);
+void appLightSrv(void);
+#endif /* APP_LIGHT_EN */
 
-
-#endif /* APP_LED_EN */
-
-#endif /* __APP_LED_H */
+#endif /* __APP_LIGHT_H */
 
 
 /************************ (C) COPYRIGHT OKMCU *****END OF FILE****/

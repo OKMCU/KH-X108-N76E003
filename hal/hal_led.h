@@ -35,8 +35,10 @@
 #if HAL_LED_EN > 0
 typedef enum {
 
-    HAL_LED_Blue = 0,
-    HAL_LED_Green = 1,
+    HAL_LED_Func = 0,
+    HAL_LED_Red = 1,
+    HAL_LED_Green = 2,
+    HAL_LED_Blue = 3
     
 } HAL_LED_t;
 
@@ -50,8 +52,8 @@ typedef enum {
 extern void halLedInit(void);
 extern void halLedOn(HAL_LED_t led);
 extern void halLedOff(HAL_LED_t led);
-//extern void halLedToggle(HAL_LED_t led);
-//extern HAL_LED_STATE_t halLedState(HAL_LED_t led);
+extern void halLedToggle(HAL_LED_t led);
+extern HAL_LED_STATE_t halLedState(HAL_LED_t led);
 
 #endif /* HAL_LED_EN > 0 */
 

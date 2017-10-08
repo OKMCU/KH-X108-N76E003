@@ -36,7 +36,7 @@
 
 extern void halButtonInit(void)
 {
-    P07_Quasi_Mode;//Mode button
+    P06_Quasi_Mode;//Mode button
     
 }
 extern HAL_BUTTON_STATE_t halButtonGetState(HAL_BUTTON_t button)
@@ -44,7 +44,7 @@ extern HAL_BUTTON_STATE_t halButtonGetState(HAL_BUTTON_t button)
     switch (button)
     {
         case HAL_BUTTON_Mode:
-        return (P07 == 0) ? HAL_BUTTON_STATE_Pressed : HAL_BUTTON_STATE_Released;
+        return (P06 == 0) ? HAL_BUTTON_STATE_Pressed : HAL_BUTTON_STATE_Released;
         
         default:
         break;

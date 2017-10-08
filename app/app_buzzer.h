@@ -1,10 +1,10 @@
 /**
   ******************************************************************************
-  * @file    app_led.h
+  * @file    app_buzzer.h
   * @author  SUN Wentao
   * @version V0.0.1
-  * @date    19-SEP-2017
-  * @brief   
+  * @date    08-OCT-2017
+  * @brief   This file contains the APIs of tri-color LED control.
    ******************************************************************************
   * @attention
   *
@@ -26,41 +26,27 @@
   */ 
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __APP_LED_H
-#define __APP_LED_H
+#ifndef __APP_BUZZER_H
+#define __APP_BUZZER_H
 
 /* Includes ------------------------------------------------------------------*/
-#include "..\bsp\stdint.h"
-#include "..\bsp\typedef.h"
 #include "firmware_conf.h"
+#include "..\bsp\typedef.h"
 
-
-#if APP_LED_EN > 0
+#if APP_BUZZER_EN > 0
 /* Exported types ------------------------------------------------------------*/
 typedef enum {
-    LED_FUNC = 0,
-    LED_R = 1,
-    LED_G = 2,
-    LED_B = 3
-} LED_t;
-
-typedef enum {
-    LED_STATE_OFF = 0,
-    LED_STATE_ON = !LED_STATE_OFF
-} LED_STATE_t;
+    APP_BUZZ_BUTTON = 0,
+    APP_BUZZ_ERROR
+} APP_BUZZ_SOUND_t;
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-void appLedInit(void);
-void appLedOn(LED_t led);
-void appLedOff(LED_t led);
-void appLedToggle(LED_t led);
-LED_STATE_t appLedState(LED_t led);
+void appBuzzerInit(void);
+bool appBuzzerBeep(APP_BUZZ_SOUND_t beep);
+#endif /* APP_BUZZER_EN */
 
-
-#endif /* APP_LED_EN */
-
-#endif /* __APP_LED_H */
+#endif /* __APP_BUZZER_H */
 
 
 /************************ (C) COPYRIGHT OKMCU *****END OF FILE****/

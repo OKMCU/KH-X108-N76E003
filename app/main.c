@@ -34,6 +34,8 @@
 #include "..\app\app_led.h"
 #include "..\app\app_spray.h"
 #include "..\app\app_water_chk.h"
+#include "..\app\app_light.h"
+#include "..\app\app_buzzer.h"
 #include "firmware_conf.h"
 
 
@@ -51,6 +53,9 @@ void main (void)
     appWaterChkInit();
 #endif /* APP_WATER_CHK_EN > 0 */
 
+#if APP_BUZZER_EN > 0
+    appBuzzerInit();
+#endif /* APP_BUZZER_EN > 0 */
 
 #if BSP_UART_EN > 0
     printf("System Started!\r\n");
@@ -63,8 +68,12 @@ void main (void)
 #endif /* APP_CMD_EN > 0 */
         appTaskSchedSrv();
 #if APP_WATER_CHK_EN > 0
-    appWaterChkSrv();
+        appWaterChkSrv();
 #endif /* APP_WATER_CHK_EN > 0 */
+
+#if APP_LIGHT_EN > 0
+        appLightSrv();
+#endif /* APP_LIGHT_EN > 0 */
     }
 }
 

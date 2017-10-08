@@ -44,12 +44,12 @@
 #define     APP_CMD_WATERCHK_EN     0
 #define     APP_CMD_CLKO_EN         0
 #define     APP_CMD_EVENT_EN        0
-#define     APP_LIGHT_EN            0
+#define     APP_LIGHT_EN            1
 #define     APP_SPRAY_EN            1
 #define     APP_TASKSCHED_EN        1
 #define     APP_BUTTON_EN           1
 #define     APP_EVENTS_EN           1
-#define     APP_BUZZER_EN           0
+#define     APP_BUZZER_EN           1
 #define     APP_LED_EN              1
 #define     APP_WATER_CHK_EN        1
 

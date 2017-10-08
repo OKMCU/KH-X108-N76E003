@@ -29,7 +29,7 @@
 #include <stdio.h>
 
 #if APP_TASKSCHED_EN > 0
-#define     APP_MAX_SCHED_TASK                10 //(<= 128)
+#define     APP_MAX_SCHED_TASK                20 //(<= 128)
 
 typedef struct {
 
