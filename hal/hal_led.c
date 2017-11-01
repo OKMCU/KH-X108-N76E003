@@ -35,7 +35,7 @@
 #if HAL_LED_EN > 0
 
 
-//#define IO_LED_NORMAL_R P17
+
 #define IO_LED_MIST     P03
 #define IO_LED_R        P00
 #define IO_LED_G        P12

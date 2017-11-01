@@ -125,10 +125,14 @@ void appEventMistButtonPress(void)
 }
 void appEventMistButtonTouchEnter(void)
 {
+    if(blinkTid >= 0)
+        return;
     appBuzzerBeep(APP_BUZZ_BUTTON);
 }
 void appEventMistButtonLongPress(void)
 {
+    if(blinkTid >= 0)
+        return;
     if(porButtonState == APP_BUTTON_STATE_MIST)
     {
         porButtonState = 0;
