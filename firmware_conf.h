@@ -38,7 +38,6 @@
 #define     DEBUG_APP_EVENTS_EN     0
 
 #define     APP_CMD_EN              0
-#define     APP_CMD_LIGHT_EN        0
 #define     APP_CMD_TEST_EN         0
 #define     APP_CMD_SPRAY_EN        0
 #define     APP_CMD_WATERCHK_EN     0
@@ -52,6 +51,7 @@
 #define     APP_BUZZER_EN           1
 #define     APP_LED_EN              1
 #define     APP_WATER_CHK_EN        1
+#define     APP_FREQHOP_EN          1
 
 #define     HAL_CONSOLE_EN          0
 #define     HAL_LED_EN              1
@@ -60,6 +60,9 @@
 #define     HAL_BUTTON_EN           1
 #define     HAL_FAN_EN              1
 #define     HAL_FREQHOP_EN          1
+#define     HAL_LIGHT_EN            1
+#define     HAL_BUZZER_EN           1
+#define     HAL_FLASH_EN            1
 
 #define     BSP_UART_EN             0
 

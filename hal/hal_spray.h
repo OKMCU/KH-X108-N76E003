@@ -3,7 +3,7 @@
   * @file    hal_spray.h
   * @author  SUN Wentao
   * @version V0.0.1
-  * @date    19-SEP-2017
+  * @date    14-OCT-2017
   * @brief   
    ******************************************************************************
   * @attention
@@ -33,6 +33,7 @@
 #include "firmware_conf.h"
 
 #if HAL_SPRAY_EN > 0
+
 extern void halSprayInit(void);
 extern void halSprayOn(void);
 extern void halSprayOff(void);

@@ -29,6 +29,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "..\APP\app_tasksched.h"
 #include "..\APP\app_buzzer.h"
+#include "..\hal\hal_buzzer.h"
 /** @addtogroup Template_Project
   * @{
   */
@@ -40,6 +41,7 @@
 #define SINGLE_BEEP_LAST      100
 #define DOUBLE_BEEP_INTERVAL  100
 #define ERROR_BEEP_INTERVAL   300
+#define FACTORY_BEEP_LAST     1000
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 static xdata int8_t beepTid = -1;
@@ -47,8 +49,31 @@ static xdata int8_t beepTid = -1;
 /* Private functions ---------------------------------------------------------*/
 static void BEEP_Cmd(bool enable)
 {
-    enable = enable;
+    if(enable == TRUE)
+        halBuzzerOn();
+    else
+        halBuzzerOff();
 }
+static void appBuzzerSoundFactory(void)
+{
+    static xdata uint8_t cnt = 0;
+
+    if(cnt == 0)
+    {
+        //GPIOD->ODR |= (uint8_t)GPIO_PIN_4;
+        BEEP_Cmd(TRUE);
+        beepTid = appTaskSchedCreate(FACTORY_BEEP_LAST, appBuzzerSoundFactory);
+        cnt++;
+    }
+    else if(cnt == 1)
+    {
+        //GPIOD->ODR &= (uint8_t)(~GPIO_PIN_4);
+        BEEP_Cmd(FALSE);
+        beepTid = -1;
+        cnt = 0;
+    }
+}
+
 static void appBuzzerSoundButton(void)
 {
     static xdata uint8_t cnt = 0;
@@ -112,8 +137,7 @@ static void appBuzzerSoundError(void)
   */
 void appBuzzerInit(void)
 {
-    
-    
+    halBuzzerInit();
 }
 
 bool appBuzzerBeep(APP_BUZZ_SOUND_t beep)
@@ -124,10 +148,15 @@ bool appBuzzerBeep(APP_BUZZ_SOUND_t beep)
         {
             beepTid = appTaskSchedCreate(SINGLE_BEEP_LAST, appBuzzerSoundButton);
         }
-        else 
+        else  if(beep == APP_BUZZ_ERROR)
         {
             beepTid = appTaskSchedCreate(SINGLE_BEEP_LAST, appBuzzerSoundError);
         }
+        else
+        {
+            beepTid = appTaskSchedCreate(SINGLE_BEEP_LAST, appBuzzerSoundFactory);
+        }
+        
         return TRUE;
     }
 

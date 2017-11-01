@@ -27,9 +27,11 @@
 
 
 /* Includes ------------------------------------------------------------------*/
-#include "..\APP\app_tasksched.h"
-#include "..\app\app_led.h"
-#include "..\APP\app_light.h"
+#include "..\app\app_tasksched.h"
+//#include "..\app\app_led.h"
+#include "..\app\app_light.h"
+//#include "..\hal\hal_pwm.h"
+#include "..\hal\hal_light.h"
 /** @addtogroup Template_Project
   * @{
   */
@@ -41,6 +43,7 @@
 #define COLOR_UPDATE_INTERVAL 5300
 #define COLOR_UPDATE_PAUSE    1000
 #define COLOR_TABLE_VAR_SIZE  7
+//#define COLOR_RES_DIV         3
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 static xdata APP_LIGHT_COLOR_t lightColor;
@@ -214,11 +217,16 @@ static void appLightUpdateColorB(void)
     }
 }
 /* Public functions ----------------------------------------------------------*/
+void appLightInit(void)
+{
+    halLightInit();
+}
+
 void appLightSet(const APP_LIGHT_COLOR_t *color)
 {
-    lightColor.red = color->red;
-    lightColor.green = color->green;
-    lightColor.blue = color->blue;
+    halLightSet(HAL_LIGHT_R, color->red);
+    halLightSet(HAL_LIGHT_G, color->green);
+    halLightSet(HAL_LIGHT_B, color->blue);
 }
 void appLightSetMode(uint8_t lightMode)
 {
@@ -250,14 +258,26 @@ void appLightSetMode(uint8_t lightMode)
         appLightSet(&colorTableSel[lightMode-3]);
     }
 }
+/*
+void appLightSrv(void)
+{
+    halLightUpdate();
+}
+*/
+/*
 void appLightSrv(void)
 {
     lightColorCnt++;
+    if(lightColorCnt > (UINT8_MAX / COLOR_RES_DIV))
+    {
+        lightColorCnt = 0;
+    }
+    
     if(lightColor.red == 0)
     {
         appLedOff(LED_R);
     }
-    else if(lightColor.red == UINT8_MAX)
+    else if(lightColor.red == (UINT8_MAX / COLOR_RES_DIV))
     {
         appLedOn(LED_R);
     }
@@ -277,7 +297,7 @@ void appLightSrv(void)
     {
         appLedOff(LED_G);
     }
-    else if(lightColor.green == UINT8_MAX)
+    else if(lightColor.green == (UINT8_MAX / COLOR_RES_DIV))
     {
         appLedOn(LED_G);
     }
@@ -297,7 +317,7 @@ void appLightSrv(void)
     {
         appLedOff(LED_B);
     }
-    else if(lightColor.blue == UINT8_MAX)
+    else if(lightColor.blue == (UINT8_MAX / COLOR_RES_DIV))
     {
         appLedOn(LED_B);
     }
@@ -313,6 +333,7 @@ void appLightSrv(void)
         }
     }
 }
+*/
 #endif /* APP_LIGHT_EN */
 
 /**

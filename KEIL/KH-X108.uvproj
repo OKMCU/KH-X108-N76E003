@@ -425,6 +425,21 @@
               <FileType>1</FileType>
               <FilePath>..\hal\hal_freqhop.c</FilePath>
             </File>
+            <File>
+              <FileName>hal_buzzer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\hal\hal_buzzer.c</FilePath>
+            </File>
+            <File>
+              <FileName>hal_flash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\hal\hal_flash.c</FilePath>
+            </File>
+            <File>
+              <FileName>hal_light.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\hal\hal_light.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -504,6 +519,11 @@
               <FileName>app_buzzer.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\app\app_buzzer.c</FilePath>
+            </File>
+            <File>
+              <FileName>app_freqhop.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\app\app_freqhop.c</FilePath>
             </File>
           </Files>
         </Group>

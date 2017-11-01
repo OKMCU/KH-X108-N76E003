@@ -36,6 +36,7 @@
 //#define FSYS_1700kHz
 //#define FSYS_170000
 
+/*
 typedef enum {
 
     BSP_HSI_CFG_16000kHz = 0,
@@ -50,11 +51,12 @@ typedef enum {
     BSP_HSI_CFG_17320kHz = 9,
     
 } BSP_HSI_CFG_t;
+*/
 
-void bspClkInit(BSP_HSI_CFG_t bspHsiCfg);
-BSP_HSI_CFG_t bspClkGetCfg(void);
-//void bspClkOutEnable(void);
-//void bspClkOutDisable(void);
+void bspClkInit(uint8_t bspHsiCfg);
+uint8_t bspClkGetCfg(void);
+void bspClkOutEnable(void);
+void bspClkOutDisable(void);
 
 
 #endif

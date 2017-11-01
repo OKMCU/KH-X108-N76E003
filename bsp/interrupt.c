@@ -32,9 +32,20 @@
 #include "..\bsp\stdint.h"
 #include "..\hal\hal_led.h"
 #include "..\hal\hal_water_chk.h"
+#include "..\hal\hal_light.h"
+#include "..\hal\hal_buzzer.h"
 #include "..\app\app_tasksched.h"
 #include "firmware_conf.h"
 
+void Timer0_ISR (void) interrupt 1
+{
+    halBuzzerToggle();
+}
+
+void Timer1_ISR(void) interrupt 3
+{
+    halLightUpdate();
+}
 
 #if BSP_UART_EN > 0
 /**
@@ -63,9 +74,12 @@ void Timer2_ISR (void) interrupt 5
 	  clr_TF2;      //Clear Timer2 Interrupt Flag
 //	  P12 = ~P12;   // GPIO1 toggle
       //printf("\n TM2 INT 0x%bX",RCMP2H);
+#if APP_TASKSCHED_EN > 0
       appTaskSchedSystickCb();
+#endif /* APP_TASKSCHED_EN > 0 */
       //halLedToggle();
 }
+
 
 //void ADC_ISR (void) interrupt 11
 //{

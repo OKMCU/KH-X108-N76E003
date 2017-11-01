@@ -42,48 +42,56 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 #define BUTTON_CHECK_INTERVAL       100
-#define BUTTON_DBLCFM_INTERVAL      5
+#define BUTTON_LONG_PRESS_TIME      2000
+#define BUTTON_VLONG_PRESS_TIME     3000
 /* Private variables ---------------------------------------------------------*/
-//static uint8_t lightButtonCnt = 0;
+static xdata int8_t tidMist = -1;
+static xdata int8_t tidPeriodCheck = -1;
+static xdata uint8_t preTouchState = 0;
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
+
+static void appButtonMistLongPress(void)
+{
+    tidMist = -1;
+    appEventMistButtonLongPress();
+}
+
 static void appButtonPeriodCheck(void)
 {
-    static xdata uint8_t pressCnt = 0;//support 8 button if using uint8_t
-    int8_t tid = -1;
-    if(halButtonGetState(HAL_BUTTON_Mode) == HAL_BUTTON_STATE_Released)
-    {
-        //released
-        pressCnt = 0;
-        tid = appTaskSchedCreate(BUTTON_CHECK_INTERVAL, appButtonPeriodCheck);
-    }
-    else
-    {
-        //pressed
-        if(pressCnt == 0)
-        {
-            pressCnt++;
-            //detect press button, need to confirm
-            tid = appTaskSchedCreate(BUTTON_DBLCFM_INTERVAL, appButtonPeriodCheck);
-        }
-        else if(pressCnt == 1)
-        {
-            pressCnt++;
-#if APP_EVENTS_EN > 0
-            appEventButtonPress();
-#endif /* APP_EVENTS_EN > 0 */
-#if DEBUG_APP_BUTTON_EN > 0
-            printf("Mode button pressed!\r\n");
-#endif /* DEBUG_APP_BUTTON_EN > 0 */
-            tid = appTaskSchedCreate(BUTTON_CHECK_INTERVAL, appButtonPeriodCheck);
-        }
-        else
-        {
-            tid = appTaskSchedCreate(BUTTON_CHECK_INTERVAL, appButtonPeriodCheck);
-        }
-    }
+    uint8_t curTouchState;
+    tidPeriodCheck = appTaskSchedCreate(BUTTON_CHECK_INTERVAL, appButtonPeriodCheck);
 
-    while(tid < 0);
+    curTouchState = appButtonGetCurrentState();
+    if(curTouchState != preTouchState)
+    {
+        switch(curTouchState)
+        {
+
+            case APP_BUTTON_STATE_MIST:
+                if(preTouchState == 0)
+                {
+                    appEventMistButtonTouchEnter();
+                    if(tidMist < 0)
+                        tidMist = appTaskSchedCreate(BUTTON_LONG_PRESS_TIME, appButtonMistLongPress);
+                }
+
+            break;
+
+
+            default:
+
+                if(tidMist >= 0)
+                {
+                    appEventMistButtonPress();
+                    appTaskSchedDelete(tidMist);
+                    tidMist = -1;
+                }
+
+            break;
+        }
+    }
+    preTouchState = curTouchState;
 }
 /* Public functions ----------------------------------------------------------*/
 
@@ -95,7 +103,8 @@ static void appButtonPeriodCheck(void)
 void appButtonInit(void)
 {
     halButtonInit();
-    if(appTaskSchedCreate(BUTTON_CHECK_INTERVAL, appButtonPeriodCheck) < 0)
+    tidPeriodCheck = appTaskSchedCreate(BUTTON_CHECK_INTERVAL, appButtonPeriodCheck);
+    if(tidPeriodCheck < 0)
     {
 #if DEBUG_APP_BUTTON_EN > 0
         printf("Create button scan task failed!");
@@ -105,7 +114,18 @@ void appButtonInit(void)
     }
 }
 
+uint8_t appButtonGetCurrentState(void)
+{
+    uint8_t state = 0;
 
+
+    if(halButtonGetState(HAL_BUTTON_Mist) == HAL_BUTTON_STATE_Pressed)
+    {
+        state |= (1<<HAL_BUTTON_Mist);
+    }
+
+    return state;
+}
 #endif /* APP_BUTTON_EN */
 
 /**

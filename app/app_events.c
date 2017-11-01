@@ -33,6 +33,8 @@
 #include "..\app\app_buzzer.h"
 #include "..\app\app_led.h"
 #include "..\app\app_events.h"
+#include "..\app\app_button.h"
+#include "..\app\app_freqhop.h"
 /** @addtogroup Template_Project
   * @{
   */
@@ -43,10 +45,11 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-static xdata uint8_t buttonCnt = 0;
+static xdata uint8_t mistButtonCnt = 0;
 static xdata uint16_t blinkCnt = 0;
 static xdata uint16_t blinkPeriod = 0;
 static xdata int8_t blinkTid = -1;
+static xdata uint8_t porButtonState = 0;
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 static void appEvent_InCaseErrorBeepFailed(void)
@@ -56,14 +59,14 @@ static void appEvent_InCaseErrorBeepFailed(void)
 
 static void blinkTask(void)
 {
-    if(appLedState(LED_FUNC) == LED_STATE_ON)
+    if(appLedState(LED_MIST) == LED_STATE_ON)
     {
-        appLedOff(LED_FUNC);
+        appLedOff(LED_MIST);
         appLightSetMode(0);
     }
     else
     {
-        appLedOn(LED_FUNC);
+        appLedOn(LED_MIST);
         appLightSetMode(5);
     }
     blinkCnt--;
@@ -76,7 +79,7 @@ static void appEvent_IndicateError(uint8_t cnt, uint16_t period)
 {
     if(blinkTid < 0 && cnt > 0 && period > 0)
     {
-        appLedOff(LED_FUNC);
+        appLedOff(LED_MIST);
         blinkCnt = cnt<<1;
         blinkPeriod = period>>1;
         blinkTid = appTaskSchedCreate(blinkPeriod, blinkTask);
@@ -84,35 +87,78 @@ static void appEvent_IndicateError(uint8_t cnt, uint16_t period)
 }
 /* Public functions ----------------------------------------------------------*/
 
-void appEventButtonPress(void)
+void appEventPowerOnReset(void)
+{
+    porButtonState = appButtonGetCurrentState();
+    if(porButtonState == APP_BUTTON_STATE_MIST)
+    {
+    }
+    else
+    {
+        appBuzzerBeep(APP_BUZZ_ERROR);
+    }
+}
+void appEventMistButtonPress(void)
 {
     if(blinkTid >= 0)
         return;
     
-    buttonCnt++;
-    appBuzzerBeep(APP_BUZZ_BUTTON);
-    if(buttonCnt == 1)
+    mistButtonCnt++;
+    if(mistButtonCnt == 1)
     {
-        appLedOn(LED_FUNC);
+        appLedOn(LED_MIST);
         appLightSetMode(0);
         appSprayOn();
     }
-    else if(buttonCnt == 2)
+    else if(mistButtonCnt == 2)
     {
-        appLedOn(LED_FUNC);
+        appLedOn(LED_MIST);
         appLightSetMode(1);
     }
     else
     {
-        buttonCnt = 0;
-        appLedOff(LED_FUNC);
+        mistButtonCnt = 0;
+        appLedOff(LED_MIST);
         appLightSetMode(0);
         appSprayOff();
     }
 }
+void appEventMistButtonTouchEnter(void)
+{
+    appBuzzerBeep(APP_BUZZ_BUTTON);
+}
+void appEventMistButtonLongPress(void)
+{
+    if(porButtonState == APP_BUTTON_STATE_MIST)
+    {
+        porButtonState = 0;
+        appBuzzerBeep(APP_BUZZ_FACTORY);
+        appFreqHop_SetEnable();
+        appSprayResetWaterChkData();
+    }
+}
+void appEventLightMistButtonVLongPress(void)
+{
+//    if(porButtonState == APP_BUTTON_STATE_LIGHT + APP_BUTTON_STATE_MIST)
+//    {
+//        appBuzzerBeep(APP_BUZZ_FACTORY);
+//        appFreqHop_SetEnable();
+//        appSprayResetWaterChkData();
+//    }
+}
+void appEventFreqHopCfm(void)
+{
+    appFreqHop_SaveFreqToFlash();
+    mistButtonCnt = 0;
+    appLightSetMode(8);//white
+    appSprayOff();
+    appBuzzerBeep(APP_BUZZ_FACTORY);
+    appLedOn(LED_MIST);
+}
+
 void appEventNoWater(void)
 {
-    buttonCnt = 0;
+    mistButtonCnt = 0;
     appLightSetMode(0);
     appSprayOff();
     appTaskSchedCreate(500, appEvent_InCaseErrorBeepFailed);

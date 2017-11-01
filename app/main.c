@@ -36,8 +36,9 @@
 #include "..\app\app_water_chk.h"
 #include "..\app\app_light.h"
 #include "..\app\app_buzzer.h"
+#include "..\app\app_events.h"
+#include "..\hal\hal_flash.h"
 #include "firmware_conf.h"
-
 
 void main (void)
 {
@@ -45,10 +46,15 @@ void main (void)
 #if APP_LED_EN > 0
     appLedInit();
 #endif /* APP_LED_EN > 0 */
+#if APP_LIGHT_EN > 0
+    appLightInit();
+#endif /* APP_LIGHT_EN > 0 */
 #if APP_BUTTON_EN > 0
     appButtonInit();
 #endif /* APP_BUTTON_EN > 0 */
+#if APP_SPRAY_EN > 0
     appSprayInit();
+#endif /* APP_SPRAY_EN > 0 */
 #if APP_WATER_CHK_EN > 0
     appWaterChkInit();
 #endif /* APP_WATER_CHK_EN > 0 */
@@ -57,23 +63,24 @@ void main (void)
     appBuzzerInit();
 #endif /* APP_BUZZER_EN > 0 */
 
+    appEventPowerOnReset();
+
 #if BSP_UART_EN > 0
     printf("System Started!\r\n");
     printf("# ");
 #endif /* BSP_UART_EN > 0 */
+    
     while(1)
     {
 #if APP_CMD_EN > 0
     	appCmdSrv();
 #endif /* APP_CMD_EN > 0 */
+#if APP_TASKSCHED_EN > 0
         appTaskSchedSrv();
+#endif /* APP_TASKSCHED_EN > 0 */
 #if APP_WATER_CHK_EN > 0
         appWaterChkSrv();
 #endif /* APP_WATER_CHK_EN > 0 */
-
-#if APP_LIGHT_EN > 0
-        appLightSrv();
-#endif /* APP_LIGHT_EN > 0 */
     }
 }
 

@@ -1,9 +1,9 @@
 /**
   ******************************************************************************
-  * @file    app_bsp.c
+  * @file    hal_buzzer.c
   * @author  SUN Wentao
   * @version V0.0.1
-  * @date    18-SEP-2017
+  * @date    15-OCT-2017
   * @brief   
    ******************************************************************************
   * @attention
@@ -25,36 +25,44 @@
   ******************************************************************************
   */ 
 
-#include "..\bsp\function_define.h"
-#include "..\bsp\bsp_uart.h"
-#include "..\bsp\bsp_clk.h"
-#include "..\bsp\interrupt.h"
-#include "..\bsp\bsp_systick.h"
-#include "firmware_conf.h"
-void bspInit(void)
-{
-    //P11_PushPull_Mode;
-    //bspClkInit(BSP_HSI_CFG_16000kHz);
-    //bspClkInit(41);
-    //bspClkInit(BSP_HSI_CFG_17000kHz);//25
-    //bspClkInit(BSP_HSI_CFG_17040kHz);//26
-    //bspClkInit(BSP_HSI_CFG_17080kHz);//27
-    //bspClkInit(BSP_HSI_CFG_17120kHz);//28
-    //bspClkInit(BSP_HSI_CFG_17160kHz);//29
-    //bspClkInit(BSP_HSI_CFG_17200kHz);//31
-    //bspClkInit(BSP_HSI_CFG_17240kHz);//32
-    //bspClkInit(BSP_HSI_CFG_17280kHz);//33
-    //bspClkInit(BSP_HSI_CFG_17320kHz);//34
+#include "..\hal\hal_buzzer.h"
+#include "..\bsp\N76E003.h"
+#include "..\bsp\SFR_Macro.h"
+#include "..\bsp\Function_define.h"
+#include "..\bsp\stdint.h"
+#include "..\bsp\common.h"
 
-    //bspClkOutEnable();
-    //while(1);
-    
-    
-#if BSP_UART_EN > 0
-    bspUart0Init_Timer3(9600);
-#endif /* BSP_UART_EN > 0 */
-    
-    bspSystickInit();
-    
-    enable_interrupt();
+#if HAL_BUZZER_EN > 0
+
+#define AUTO_RELOAD_VALUE   280     //about 5kHz intterrupt
+extern void halBuzzerInit(void)
+{
+    P05 = 0;
+    P05_PushPull_Mode;
+
+    TIMER0_MODE1_ENABLE;
 }
+extern void halBuzzerOn(void)
+{
+    TH0 = ((65536-AUTO_RELOAD_VALUE) >> 8) & 0xFF;
+    TH1 = (65536-AUTO_RELOAD_VALUE) & 0xFF;
+    set_ET0;
+    set_TR0;
+}
+extern void halBuzzerOff(void)
+{
+    clr_ET0;
+    clr_TR0;
+    P05 = 0;
+}
+
+extern void halBuzzerToggle(void)
+{
+    clr_TR0;
+    TH0 = ((65536-AUTO_RELOAD_VALUE) >> 8) & 0xFF;
+    TH1 = (65536-AUTO_RELOAD_VALUE) & 0xFF;
+    set_TR0;
+    P05 = !P05;
+}
+#endif /* HAL_BUZZER_EN > 0 */
+

@@ -33,7 +33,6 @@
 #include "..\hal\hal_console.h"
 #include "..\app\app_cmd.h"
 #include "..\app\app_cmd_test.h"
-//#include "..\app\app_cmd_light.h"
 #include "..\app\app_cmd_spray.h"
 #include "..\app\app_cmd_waterchk.h"
 #include "..\app\app_cmd_clko.h" 
@@ -62,9 +61,9 @@ static code Command_t cmdList[] = {
     {"test",        appCmd_test},
 #endif /* APP_CMD_TEST_EN */
 
-#if APP_CMD_LIGHT_EN > 0
-    {"light",       appCmd_light},
-#endif /* APP_CMD_LIGHT_EN */
+#if APP_CMD_PWM_EN > 0
+    {"pwm",       appCmd_pwm},
+#endif /* APP_CMD_PWM_EN */
 
 #if APP_CMD_SPRAY_EN > 0
     {"spray",       appCmd_spray},
@@ -87,8 +86,8 @@ void appCmdExecute(char *cmdStr)
 {
     void (*cmdFxn)(char *optarg);
     uint16_t i;
-    char *cmd = NULL;
-    char *optarg = NULL;
+    char * cmd = NULL;
+    char * optarg = NULL;
 	
     cmd = strtok_r(cmdStr, " ", &optarg);
     

@@ -4,7 +4,7 @@
   * @author  SUN Wentao
   * @version V0.0.1
   * @date    9-AUG-2017
-  * @brief   
+  * @brief   This file contains the APIs of tri-color LED control.
    ******************************************************************************
   * @attention
   *
@@ -40,7 +40,11 @@
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-void appEventButtonPress(void);
+void appEventPowerOnReset(void);
+void appEventMistButtonTouchEnter(void);
+void appEventMistButtonPress(void);
+void appEventMistButtonLongPress(void);
+void appEventFreqHopCfm(void);
 void appEventNoWater(void);
 #endif /* APP_EVENTS_EN > 0 */
 

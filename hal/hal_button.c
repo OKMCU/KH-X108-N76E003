@@ -43,7 +43,7 @@ extern HAL_BUTTON_STATE_t halButtonGetState(HAL_BUTTON_t button)
 {
     switch (button)
     {
-        case HAL_BUTTON_Mode:
+        case HAL_BUTTON_Mist:
         return (P06 == 0) ? HAL_BUTTON_STATE_Pressed : HAL_BUTTON_STATE_Released;
         
         default:

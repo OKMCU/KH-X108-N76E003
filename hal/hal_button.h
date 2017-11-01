@@ -36,7 +36,7 @@
 
 typedef enum {
     
-    HAL_BUTTON_Mode = 0,
+    HAL_BUTTON_Mist = 0,
     
 } HAL_BUTTON_t;
 

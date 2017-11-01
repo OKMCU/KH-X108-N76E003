@@ -30,6 +30,8 @@
 #define __APP_BUTTON_H
 
 /* Includes ------------------------------------------------------------------*/
+#include "..\bsp\stdint.h"
+#include "..\bsp\typedef.h"
 #include "firmware_conf.h"
 
 
@@ -37,8 +39,10 @@
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
+#define APP_BUTTON_STATE_MIST       (uint8_t)(1<<0)
 /* Exported functions ------------------------------------------------------- */
 void appButtonInit(void);
+uint8_t appButtonGetCurrentState(void);
 #endif /* APP_BUTTON_EN */
 
 #endif /* __APP_BUTTON_H */

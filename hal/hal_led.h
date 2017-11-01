@@ -35,10 +35,10 @@
 #if HAL_LED_EN > 0
 typedef enum {
 
-    HAL_LED_Func = 0,
-    HAL_LED_Red = 1,
-    HAL_LED_Green = 2,
-    HAL_LED_Blue = 3
+    HAL_LED_MIST = 0,
+    HAL_LED_R = 1,
+    HAL_LED_G = 2,
+    HAL_LED_B = 3
     
 } HAL_LED_t;
 

@@ -1,10 +1,10 @@
 /**
   ******************************************************************************
-  * @file    app_buzzer.h
+  * @file    hal_flash.h
   * @author  SUN Wentao
   * @version V0.0.1
-  * @date    08-OCT-2017
-  * @brief   This file contains the APIs of tri-color LED control.
+  * @date    19-OCT-2017
+  * @brief   
    ******************************************************************************
   * @attention
   *
@@ -25,29 +25,20 @@
   ******************************************************************************
   */ 
 
-/* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __APP_BUZZER_H
-#define __APP_BUZZER_H
+#ifndef __HAL_FLASH_H__
+#define __HAL_FLASH_H__
 
-/* Includes ------------------------------------------------------------------*/
-#include "firmware_conf.h"
+#include "..\bsp\stdint.h"
 #include "..\bsp\typedef.h"
+#include "firmware_conf.h"
 
-#if APP_BUZZER_EN > 0
-/* Exported types ------------------------------------------------------------*/
-typedef enum {
-    APP_BUZZ_BUTTON = 0,
-    APP_BUZZ_ERROR,
-    APP_BUZZ_FACTORY
-} APP_BUZZ_SOUND_t;
-/* Exported constants --------------------------------------------------------*/
-/* Exported macro ------------------------------------------------------------*/
-/* Exported functions ------------------------------------------------------- */
-void appBuzzerInit(void);
-bool appBuzzerBeep(APP_BUZZ_SOUND_t beep);
-#endif /* APP_BUZZER_EN */
+#if HAL_FLASH_EN > 0
 
-#endif /* __APP_BUZZER_H */
+extern void halFlashErase(void);
+extern void halFlashWrite(const uint8_t *buf, uint8_t len);
+extern void halFlashRead(uint8_t *buf, uint8_t len);
 
+#endif /* HAL_FLASH_EN > 0 */
 
-/************************ (C) COPYRIGHT OKMCU *****END OF FILE****/
+#endif /* __HAL_FLASH_H__ */
+

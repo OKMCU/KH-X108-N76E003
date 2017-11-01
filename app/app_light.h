@@ -51,9 +51,10 @@ typedef enum {
 /* Exported macro ------------------------------------------------------------*/
 #define COLOR_TABLE_SEL_SIZE  6
 /* Exported functions ------------------------------------------------------- */
+void appLightInit(void);
 void appLightSet(const APP_LIGHT_COLOR_t *color);
 void appLightSetMode(uint8_t lightMode);
-void appLightSrv(void);
+//void appLightSrv(void);
 #endif /* APP_LIGHT_EN */
 
 #endif /* __APP_LIGHT_H */

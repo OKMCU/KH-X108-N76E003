@@ -41,6 +41,7 @@
 extern void    appSprayInit (void);
 extern void    appSprayOn   (void);
 extern void    appSprayOff  (void);
+extern void    appSprayResetWaterChkData(void);
 //extern void    appSprayGetResult(uint16_t *iir, uint16_t *iirMax, uint16_t *iirMin);
 #endif /* APP_SPRAY_EN > 0 */
 

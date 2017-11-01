@@ -34,8 +34,6 @@
 
 #if HAL_FREQHOP_EN > 0
 
-#define     HAL_FREQHOP_LVL_MAX     9
-
 extern void halFreqHopSet(uint8_t freq_lvl);
 extern uint8_t halFreqHopGet(void);
 

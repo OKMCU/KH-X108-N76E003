@@ -34,19 +34,24 @@
 
 #if HAL_LED_EN > 0
 
+
+//#define IO_LED_NORMAL_R P17
+#define IO_LED_MIST     P03
+#define IO_LED_R        P00
+#define IO_LED_G        P12
+#define IO_LED_B        P01
+
+
 extern void halLedInit(void)
 {
-    P03 = 0;
-    P03_PushPull_Mode; //HAL_LED_Func
-    
-    P00 = 0;
-    P00_PushPull_Mode; //HAL_LED_Red
-
-    P01 = 0;
-    P01_PushPull_Mode; //HAL_LED_Green
-
-    P12 = 0;
-    P12_PushPull_Mode; //HAL_LED_Blue
+    IO_LED_MIST = 0;
+	IO_LED_R = 0;
+	IO_LED_G = 0;
+	IO_LED_B = 0;
+    P03_PushPull_Mode; //HAL_LED_MIST
+	P00_PushPull_Mode; //HAL_LED_R
+    P12_PushPull_Mode; //HAL_LED_G
+    P01_PushPull_Mode; //HAL_LED_B
 
     
 }
@@ -54,20 +59,20 @@ extern void halLedOn(HAL_LED_t led)
 {
     switch (led)
     {
-        case HAL_LED_Func:
-            P03 = 1;
+        case HAL_LED_MIST:
+            IO_LED_MIST = 1;
         break;
         
-        case HAL_LED_Red:
-            P00 = 1;
+        case HAL_LED_R:
+            IO_LED_R = 1;
         break;
-        
-        case HAL_LED_Green:
-            P01 = 1;
+
+        case HAL_LED_G:
+            IO_LED_G = 1;
         break;
-        
-        case HAL_LED_Blue:
-            P12 = 1;
+
+        case HAL_LED_B:
+            IO_LED_B = 1;
         break;
     }
 }
@@ -75,20 +80,20 @@ extern void halLedOff(HAL_LED_t led)
 {
     switch (led)
     {
-        case HAL_LED_Func:
-            P03 = 0;
+        case HAL_LED_MIST:
+            IO_LED_MIST = 0;
         break;
         
-        case HAL_LED_Red:
-            P00 = 0;
+        case HAL_LED_R:
+            IO_LED_R = 0;
         break;
-        
-        case HAL_LED_Green:
-            P01 = 0;
+
+        case HAL_LED_G:
+            IO_LED_G = 0;
         break;
-        
-        case HAL_LED_Blue:
-            P12 = 0;
+
+        case HAL_LED_B:
+            IO_LED_B = 0;
         break;
     }
 }
@@ -96,20 +101,20 @@ extern void halLedToggle(HAL_LED_t led)
 {
     switch (led)
     {
-        case HAL_LED_Func:
-            P03 = !P03;
+        case HAL_LED_MIST:
+            IO_LED_MIST = !IO_LED_MIST;
         break;
         
-        case HAL_LED_Red:
-            P00 = !P00;
+        case HAL_LED_R:
+            IO_LED_R = !IO_LED_R;
         break;
-        
-        case HAL_LED_Green:
-            P01 = !P01;
+
+        case HAL_LED_G:
+            IO_LED_G = !IO_LED_G;
         break;
-        
-        case HAL_LED_Blue:
-            P12 = !P12;
+
+        case HAL_LED_B:
+            IO_LED_B = !IO_LED_B;
         break;
     }
 }
@@ -117,14 +122,14 @@ extern HAL_LED_STATE_t halLedState(HAL_LED_t led)
 {
     switch (led)
     {
-        case HAL_LED_Func:
-            return (P03 == 0) ? HAL_LED_STATE_OFF : HAL_LED_STATE_ON;
-        case HAL_LED_Red:
-            return (P00 == 0) ? HAL_LED_STATE_OFF : HAL_LED_STATE_ON;
-        case HAL_LED_Green:
-            return (P01 == 0) ? HAL_LED_STATE_OFF : HAL_LED_STATE_ON;
-        case HAL_LED_Blue:
-            return (P12 == 0) ? HAL_LED_STATE_OFF : HAL_LED_STATE_ON;
+        case HAL_LED_MIST:
+            return (IO_LED_MIST == 0) ? HAL_LED_STATE_OFF : HAL_LED_STATE_ON;
+        case HAL_LED_R:
+            return (IO_LED_R == 0) ? HAL_LED_STATE_OFF : HAL_LED_STATE_ON;
+        case HAL_LED_G:
+            return (IO_LED_G == 0) ? HAL_LED_STATE_OFF : HAL_LED_STATE_ON;
+        case HAL_LED_B:
+            return (IO_LED_B == 0) ? HAL_LED_STATE_OFF : HAL_LED_STATE_ON;
     }
 
     return HAL_LED_STATE_OFF;

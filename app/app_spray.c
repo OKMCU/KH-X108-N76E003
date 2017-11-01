@@ -37,6 +37,7 @@
 #include "..\app\app_tasksched.h"
 #include "..\app\app_events.h"
 #include "..\app\app_water_chk.h"
+#include "..\app\app_freqhop.h"
 
 #include <stdio.h>
 
@@ -48,113 +49,85 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
-#define APP_SPRAY_ALGO_CheckIIR_EN      1
+#define APP_SPRAY_WC_ALGO_EN            1
 /* Private macro -------------------------------------------------------------*/
 #define APP_SPRAY_ON_TIME               (uint32_t)5     //in ms. 1.7MHz on time in one period. Larger on time, larger power consumption
 #define APP_SPRAY_OFF_TIME              (uint32_t)16    //in ms. 1.7MHz off time in one period. Larger off time, lower power consumption.
-#define APP_SPRAY_WC_DELAY              (uint32_t)3     //in ms. Phase delay time. Should confirm this phase delay using dual channel oscilloscope.
-#define APP_SPRAY_WC_THL                (uint16_t)1638  //water exist, higher than 1.0V.
-#define APP_SPRAY_WC_THH                (uint16_t)3686  //water exist, lower than 4.5V.
-#define APP_SPRAY_WC_IIR_MIN_TRAIN      (uint8_t)10     //minimum IIR filter training times.
-#define APP_SPRAY_WC_DELTA_BUF_SIZE     (uint8_t)15     //15 pulses last for about 315 ms, should be enough to detect the no water tremble.
-#define APP_SPRAY_WC_DELTA_SUM_TH       (uint16_t)2500  //tremble delta sum threshold.
-#define APP_SPRAY_FHOP_AVG_MIN_TRAIN    (uint16_t)50    //minimum average value training times of a working frequency.
-#define APP_SPRAY_FHOP_AVG_DLY_CFM_CNT  (uint16_t)50    //if it can working stably for 50 groups of pulses, confirm it is stable and confirm the average value recored @No.200 pulses. 
-#define APP_SPRAY_FHOP_FREQ_LVL_MIN     (uint8_t)1      //lowest frequency to try
-#define APP_SPRAY_FHOP_FREQ_LVL_MAX     (uint8_t)9      //highest frequency to try
+#define APP_SPRAY_WC_TIME               (uint32_t)1     //in ms. Water check time. 
+#define APP_SPRAY_WC_BASELINE_DELTA_TH  (uint16_t)1000
+#define APP_SPRAY_WC_TH_TRANSIENT_HI    (uint16_t)3440  //no water, if higher than 4.2V
+#define APP_SPRAY_WC_TH_TRANSIENT_LO    (uint16_t)1064  //no water, if lower  than 1.3V 
+#define APP_SPRAY_WC_TH_IIR_HI          (uint16_t)3440  //no water, if higher than 4.2V
+#define APP_SPRAY_WC_TH_IIR_LO          (uint16_t)1064  //no water, if lower  than 1.3V 
+#define APP_SPRAY_WC_TH_ABNORMAL_CNT_UNLOCK    (uint8_t)30     //no water, if abnormal count higher than this value, when frequency is not confirmed
+#define APP_SPRAY_WC_TH_ABNORMAL_CNT_LOCK      (uint8_t)40     //no water, if abnormal count higher than this value, when frequency is confirmed
+#define APP_SPRAY_WC_BASELINE_MIN_TRAIN (uint16_t)200   //minmimum training times for baseline
+#define APP_SPRAY_WC_IIR_MIN_TRAIN      (uint32_t)100   //minimum IIR filter training times.
+#define APP_SPRAY_WC_RESULT_BUF_SIZE    (uint8_t)100    //100 pulses last for about 1.5sec, should be enough to detect the no water tremble.
+#define APP_SPRAY_WC_TH_RESULT_CNT      (uint8_t)200    //check more abnormal data after 150 pulses, the smaller the better but should not lead to false detection.
+#define APP_SPRAY_WC_TH_DELTAINDEX_HI   (uint16_t)1500  //no water, if (max -min) > 1500, the lower the better but should not lead to false detection.
+#define APP_SPRAY_WC_TH_DELTAINDEX_LO   (uint16_t)400   //no water, if (max -min) < 510, the larger the better but should not lead to false detection.
+#define APP_SPRAY_WC_TH_DELTAINDEX_NORMAL_MAX (uint16_t)700 //no water, if dbgRecMaxDeltaIndex < 800
 /* Private variables ---------------------------------------------------------*/
+//static bool sprayOnFlag = FALSE;
 static xdata int8_t  sprayPowerCtrlTid = -1;
-static xdata int8_t  waterCheckTid = -1;
-static xdata uint8_t resultCnt = 0;
+static xdata int8_t  stopWaterCheckTid = -1;
+//static xdata uint16_t resultRawMax = 0;
+//static xdata uint16_t resultRawMin = 0;
+static xdata uint32_t resultCnt = 0;
 static xdata uint16_t resultIIR = 0;
-static xdata uint16_t resultIIRMax = 0;
-static xdata uint16_t resultIIRMin = 0;
-//static xdata uint16_t resultPre = 0;
-//static xdata uint16_t resultCur = 0;
-static xdata uint16_t resultDelta[APP_SPRAY_WC_DELTA_BUF_SIZE] = {0};
-static xdata uint8_t resultDeltaPtr = 0;
-static xdata uint32_t fhopSampleSum[HAL_FREQHOP_LVL_MAX+1] = {0};
-static xdata uint16_t fhopSampleCnt = 0;
-static xdata uint8_t fhopSampleLock[HAL_FREQHOP_LVL_MAX+1] = {0};
-static xdata uint8_t fhopSampleLockCnt = 0;
-static xdata uint8_t fhopSampleDlyCfmCnt = APP_SPRAY_FHOP_AVG_DLY_CFM_CNT;
+static xdata uint16_t baseline = 0;
+//static xdata uint16_t resultIIR = 0;
+//static xdata uint16_t resultIIRMax = 0;
+//static xdata uint16_t resultIIRMin = 0;
+static xdata uint16_t resultBuf[APP_SPRAY_WC_RESULT_BUF_SIZE] = {0};
+static xdata uint8_t resultBufPtr = 0;
+static xdata uint16_t dbgRecMinDeltaIndex = UINT16_MAX;
+static xdata uint16_t dbgRecMaxDeltaIndex = 0;
+//static xdata uint32_t dbgRecMinShakeIndex = UINT32_MAX;
+//static xdata uint32_t dbgRecMaxShakeIndex = 0;
 /* Private function prototypes -----------------------------------------------*/
-static void appSprayTimerTask_TriggerCheckWater(void);
+static void appSprayTimerTask_StopCheckWater(void);
 static void appSprayOnPeriod(void);
 static void appSprayOffPeriod(void);
-static void appSprayResetWaterChkData(void);
 static bool appSprayIsWaterExist(void);
 /* Private functions ---------------------------------------------------------*/
-static void appSprayTimerTask_TriggerCheckWater(void)
-{
-    waterCheckTid = -1;
-#if APP_WATER_CHK_EN > 0
-    appWaterChkStart();
-#endif /* APP_WATER_CHK_EN > 0 */
-}
-
-static void appSprayOnPeriod(void)
-{
-    halSprayOn();
-
-    //halWaterChkStart();
-    //peak = 0;
-    sprayPowerCtrlTid = appTaskSchedCreate(APP_SPRAY_ON_TIME, appSprayOffPeriod);
-    if(waterCheckTid >= 0)
-    {
-        appTaskSchedDelete(waterCheckTid);
-        waterCheckTid = -1;
-    }
-    waterCheckTid = appTaskSchedCreate(APP_SPRAY_WC_DELAY, appSprayTimerTask_TriggerCheckWater);
-}
-
-static void appSprayOffPeriod(void)
+static void appSprayTimerTask_StopCheckWater(void)
 {
 #if APP_WATER_CHK_EN > 0
     APP_WATERCHK_RESULT_t *result;
 #endif /* APP_WATER_CHK_EN > 0 */
-    uint8_t freqLevel;
-    uint8_t i;
-    uint32_t min = UINT32_MAX;
-    uint8_t minId;
-//    uint8_t fhopLockCnt = 0;
-    
-    halSprayOff();
-    if(waterCheckTid >= 0)
-    {
-        appTaskSchedDelete(waterCheckTid);
-        waterCheckTid = -1;
-    }
-    
+
+    stopWaterCheckTid = -1;
 #if APP_WATER_CHK_EN > 0
     appWaterChkStop();
-#endif /* APP_WATER_CHK_EN > 0 */
-    sprayPowerCtrlTid = appTaskSchedCreate(APP_SPRAY_OFF_TIME, appSprayOnPeriod);
-#if APP_WATER_CHK_EN > 0
     result = appWaterChkGetResult();
-    
-//    resultPre = resultCur;
-//    resultCur = result->avg;
 #endif /* APP_WATER_CHK_EN > 0 */
-    
-    if(resultCnt < APP_SPRAY_WC_IIR_MIN_TRAIN)
+
+    resultBuf[resultBufPtr++] = result->avg;
+    if(resultBufPtr >= APP_SPRAY_WC_RESULT_BUF_SIZE)
     {
-        resultCnt++;
-        resultIIR = (resultIIR == 0) ? result->avg : (uint16_t)(((uint32_t)resultIIR*7 + result->avg)>>3);
+        resultBufPtr = 0;
+    }
+    resultCnt++;
+    
+    resultIIR = (resultIIR == 0) ? result->avg : (uint16_t)(((uint32_t)resultIIR*31 + result->avg)>>5);
+    if(resultCnt < APP_SPRAY_WC_BASELINE_MIN_TRAIN/10)
+    {
+        baseline = (baseline == 0) ? result->avg : (uint16_t)(((uint32_t)baseline*7 + result->avg)>>3);
     }
     else
     {
-          resultIIR = (resultIIR == 0) ? result->avg : (uint16_t)(((uint32_t)resultIIR*63 + result->avg)>>6);
-          resultIIRMax = resultIIR > resultIIRMax ? resultIIR : resultIIRMax;
-          resultIIRMin = resultIIR < resultIIRMin ? resultIIR : resultIIRMin;
-          resultDelta[resultDeltaPtr++] = resultIIR > result->avg ? (resultIIR-result->avg) : (result->avg - resultIIR);
-          if(resultDeltaPtr >= APP_SPRAY_WC_DELTA_BUF_SIZE)
-          {
-              resultDeltaPtr = 0;
-          }
+        if(baseline > result->avg)
+        {
+            baseline--;
+        }
+        else if(baseline < result->avg)
+        {
+            baseline++;
+        }
     }
     
-    freqLevel = halFreqHopGet();
     if(appSprayIsWaterExist() == FALSE)
     {
 #if DEBUG_APP_SPRAY_EN > 0
@@ -164,139 +137,190 @@ static void appSprayOffPeriod(void)
 #if APP_EVENTS_EN > 0
         appEventNoWater();
 #endif /* APP_EVENTS_EN > 0 */
-
-        if(fhopSampleLockCnt != APP_SPRAY_FHOP_FREQ_LVL_MAX - APP_SPRAY_FHOP_FREQ_LVL_MIN + 1 || fhopSampleDlyCfmCnt > 0)
+#if APP_FREQHOP_EN > 0
+        if(appFreqHop_IsEnabled() == TRUE)
         {
-            fhopSampleCnt = 0;
-            fhopSampleLockCnt = 0;
-            for(i = APP_SPRAY_FHOP_FREQ_LVL_MIN; i <= APP_SPRAY_FHOP_FREQ_LVL_MAX; i++)
-            {
-                fhopSampleLock[i] = 0;
-                fhopSampleSum[i] = 0;
-            }
+            if(appFreqHop_LockFreq() == FALSE)
+                appFreqHop_Reset();
         }
-        
-
+#endif /* APP_FREQHOP_EN > 0 */
         appSprayResetWaterChkData();
     }
     else
     {
-        if(fhopSampleLockCnt == APP_SPRAY_FHOP_FREQ_LVL_MAX - APP_SPRAY_FHOP_FREQ_LVL_MIN + 1)
-        {
-            if(fhopSampleDlyCfmCnt > 0)
-            {
-                fhopSampleDlyCfmCnt--;
-            }
-        }
-        
-        if(fhopSampleLock[freqLevel] == 0)
-        {
-            fhopSampleCnt++;
-            if(fhopSampleCnt < APP_SPRAY_FHOP_AVG_MIN_TRAIN)
-            {
-                fhopSampleSum[freqLevel] += result->avg;
-            }
-            else
-            {
-                fhopSampleLock[freqLevel] = 1;
-                fhopSampleLockCnt++;
-                for(i = APP_SPRAY_FHOP_FREQ_LVL_MIN; i <= APP_SPRAY_FHOP_FREQ_LVL_MAX; i++)
-                {
-                    if(fhopSampleLock[i] == 0)
-                    {
-                        halFreqHopSet(i);
-                        fhopSampleCnt = 0;
-                        fhopSampleSum[i] = 0;
-                        appSprayResetWaterChkData();
-                        break;
-                    }
-                    else
-                    {
-                        if(fhopSampleSum[i] < min)
-                        {
-                            min = fhopSampleSum[i];
-                            minId = i;
-                        }
-                    }
-                }
-                
-                if(fhopSampleLockCnt == APP_SPRAY_FHOP_FREQ_LVL_MAX - APP_SPRAY_FHOP_FREQ_LVL_MIN + 1)
-                {
-                    //all frequency is locked
-                    if(minId != freqLevel)
-                    {
-                        halFreqHopSet(minId);
-                        appSprayResetWaterChkData();
-                        fhopSampleDlyCfmCnt = APP_SPRAY_FHOP_AVG_DLY_CFM_CNT;
-                    }
-                }
-            }
-        }
-    }
-}
+#if APP_FREQHOP_EN > 0
 
-static void appSprayResetWaterChkData(void)
-{
-    uint8_t i;
+        if(appFreqHop_IsEnabled() == TRUE)
+        {
+            if(appFreqHop_UpdateFreq() == TRUE)
+            {
+                appSprayResetWaterChkData();
+            }
+        }
+#endif
+    }
     
-    resultCnt = 0;
-        
-    resultIIRMin = UINT16_MAX;
-    resultIIRMax = 0;
-    resultIIR = 0;
-//    resultPre = 0;
-//    resultCur = 0;
-    resultDeltaPtr = 0;
-    for(i = 0; i < APP_SPRAY_WC_DELTA_BUF_SIZE; i++)
-    {
-        resultDelta[i] = 0;
-    }
 }
 
-#if APP_SPRAY_ALGO_CheckIIR_EN > 0
+
+
+static void appSprayOnPeriod(void)
+{
+
+    halSprayOn();
+    sprayPowerCtrlTid = appTaskSchedCreate(APP_SPRAY_ON_TIME, appSprayOffPeriod);
+}
+
+static void appSprayOffPeriod(void)
+{
+    halSprayOff();
+#if APP_WATER_CHK_EN > 0
+    appWaterChkStart();
+#endif /* APP_WATER_CHK_EN > 0 */
+    if(stopWaterCheckTid >= 0)
+    {
+        appTaskSchedDelete(stopWaterCheckTid);
+    }
+    stopWaterCheckTid = appTaskSchedCreate(APP_SPRAY_WC_TIME, appSprayTimerTask_StopCheckWater);
+    sprayPowerCtrlTid = appTaskSchedCreate(APP_SPRAY_OFF_TIME, appSprayOnPeriod);
+}
+
+#if APP_SPRAY_WC_ALGO_EN > 0
 static bool appSprayIsWaterExist(void)
 {
     uint8_t i;
-    uint16_t deltaSum = 0;
-    
-    if(sprayPowerCtrlTid >= 0 && resultCnt >= APP_SPRAY_WC_IIR_MIN_TRAIN)
+    uint16_t max = 0;
+    uint16_t min = UINT16_MAX;
+    uint8_t abnormalCnt = 0;
+    int16_t delta = 0;
+    uint8_t failId = 0;
+//    uint32_t flatIndex = 0;
+    uint16_t deltaIndex;
+    uint16_t effectiveCnt = 0;
+//    uint16_t average;
+    uint8_t abnormalCntTh;
+    for(i = 0; i < APP_SPRAY_WC_RESULT_BUF_SIZE; i++)
     {
-        if(fhopSampleLockCnt == APP_SPRAY_FHOP_FREQ_LVL_MAX - APP_SPRAY_FHOP_FREQ_LVL_MIN + 1)
+        if(resultBuf[i] != 0)
         {
-            if(resultIIR > APP_SPRAY_WC_THH)
+            effectiveCnt++;
+            if(resultBuf[i] > max)
             {
-#if DEBUG_APP_SPRAY_EN > 0
-                printf("resultIIR = ");
-                printf("%d", resultIIR);
-                printf("\r\n");
-#endif
-                return FALSE;
+                max = resultBuf[i];
+            }
+            if(resultBuf[i] < min)
+            {
+                min = resultBuf[i];
+            }
+            if(resultBuf[i] > APP_SPRAY_WC_TH_TRANSIENT_HI || resultBuf[i] < APP_SPRAY_WC_TH_TRANSIENT_LO)
+            {
+                abnormalCnt++;
             }
         }
-        
-        if(resultIIR < APP_SPRAY_WC_THL)
-        {
-#if DEBUG_APP_SPRAY_EN > 0
-            printf("resultIIR = ");
-            printf("%d", resultIIR);
-            printf("\r\n");
-#endif
-            return FALSE;
-        }
+    }
 
-        for(i = 0; i < APP_SPRAY_WC_DELTA_BUF_SIZE; i++)
+    deltaIndex = max - min;
+
+    if(appFreqHop_RoughTuneFinished() == TRUE)
+    {
+        if(sprayPowerCtrlTid >= 0)
         {
-            deltaSum += resultDelta[i];
-        }
-        
-        if(deltaSum > APP_SPRAY_WC_DELTA_SUM_TH)
-        {
-            return FALSE;
+            if(resultCnt > APP_SPRAY_WC_IIR_MIN_TRAIN && resultCnt > APP_SPRAY_WC_BASELINE_MIN_TRAIN)
+            {
+                delta = resultIIR - baseline;
+                if(delta < 0)
+                {
+                    delta = -delta;
+                }
+                if(delta > APP_SPRAY_WC_BASELINE_DELTA_TH)
+                {
+                    failId |= (1<<0);//0x01
+                }
+            }
+
+            if(appFreqHop_FineTuneFinished() == TRUE)
+            {
+                if(resultCnt <= APP_SPRAY_WC_BASELINE_MIN_TRAIN)
+                {
+                    abnormalCntTh = appFreqHop_LockFreq() == TRUE ? APP_SPRAY_WC_TH_ABNORMAL_CNT_LOCK : APP_SPRAY_WC_TH_ABNORMAL_CNT_UNLOCK;
+                    if(abnormalCnt > abnormalCntTh)
+                    {
+                        failId |= (1<<1);//0x02
+                    }
+                }
+                else
+                {
+                    if(resultIIR > APP_SPRAY_WC_TH_IIR_HI|| resultIIR < APP_SPRAY_WC_TH_IIR_LO)
+                    {
+                        failId |= (1<<4);//0x10
+                    }
+                }
+                
+                if(resultCnt > APP_SPRAY_WC_RESULT_BUF_SIZE)
+                {
+                    dbgRecMinDeltaIndex = deltaIndex < dbgRecMinDeltaIndex ? deltaIndex : dbgRecMinDeltaIndex;
+                    dbgRecMaxDeltaIndex = deltaIndex > dbgRecMaxDeltaIndex ? deltaIndex : dbgRecMaxDeltaIndex;
+                    
+                    if(appFreqHop_LockFreq() == FALSE)
+                    {
+                        if(deltaIndex < APP_SPRAY_WC_TH_DELTAINDEX_LO)
+                        {
+                            failId |= (1<<2);//0x04
+                        }
+
+                        if(deltaIndex > APP_SPRAY_WC_TH_DELTAINDEX_HI)
+                        {
+                            failId |= (1<<3);//0x08
+                        }
+
+                        //if(resultCnt > APP_SPRAY_WC_TH_RESULT_CNT)
+                        //{
+                            //working long enough, do more check here
+                            //if(dbgRecMaxDeltaIndex < APP_SPRAY_WC_TH_DELTAINDEX_NORMAL_MAX)
+                            //{
+                                //failId |= (1<<4);//0x10
+                            //}
+                        //}
+                    }
+                    else
+                    {
+                        dbgRecMinDeltaIndex = dbgRecMinDeltaIndex;
+                        dbgRecMaxDeltaIndex = dbgRecMaxDeltaIndex;
+                    }
+                }
+            }
         }
     }
+    //else
+    //{
+    //    if(resultCnt >= 2)
+    //    {
+    //        if(deltaIndex > APP_SPRAY_WC_TH_DELTAINDEX_HI)
+    //        {
+                //failId |= (1<<5);//0x20
+    //        }
+    //    }
+    //}
+    
+    if(appFreqHop_Timeout() == TRUE)
+    {
+        failId |= (1<<6);//0x40
+    }
+
+    if(failId != 0)
+    {
+        return FALSE;;
+    }
+    
     return TRUE;
 }
-#endif /* APP_SPRAY_ALGO_CheckIIR_EN */
+#else /* APP_SPRAY_ALGO_CheckIIR_EN > 0 */
+static bool appSprayIsWaterExist(void)
+{
+
+    return TRUE;
+}
+#endif /* APP_SPRAY_ALGO_CheckIIR_EN > 0 */
 
 
 
@@ -314,36 +338,53 @@ extern void    appSprayInit (void)
 #if HAL_FAN_EN > 0
     halFanInit();
 #endif /* HAL_FAN_EN > 0 */
+
+#if APP_FREQHOP_EN > 0
+    appFreqHop_Init();
+#endif /* APP_FREQHOP_EN > 0 */
     appSprayResetWaterChkData();
+    
+//    sprayPowerCtrlTid = appTaskSchedCreate(APP_SPRAY_OFF_TIME, appSprayOnPeriod);
 }
 extern void    appSprayOn   (void)
 {
-    //uint8_t i;
-    
     if(sprayPowerCtrlTid < 0)
     {
 #if HAL_FAN_EN > 0
         halFanOn();
 #endif /* HAL_FAN_EN > 0 */
-        appSprayOnPeriod();
-        
-        //appSprayResetWaterChkData();
-        
+        sprayPowerCtrlTid = appTaskSchedCreate(0, appSprayOnPeriod);
     }
 }
 extern void    appSprayOff  (void)
 {
-    //uint8_t i;
-    
     if(sprayPowerCtrlTid >= 0)
     {
 #if HAL_FAN_EN > 0
         halFanOff();
 #endif /* HAL_FAN_EN > 0 */
+        //halPwmOff(HAL_PWM_ONOFF_SPRAY);
+        //halPwmSetFrequency(HAL_PWM_FREQ_LIGHT);
+        //halPwmOn(HAL_PWM_ONOFF_LIGHT);
         halSprayOff();
         appTaskSchedDelete(sprayPowerCtrlTid);
         sprayPowerCtrlTid = -1;
-        //appSprayResetWaterChkData();
+    }
+}
+
+extern void appSprayResetWaterChkData(void)
+{
+    uint8_t i;
+    
+    resultCnt = 0;
+    resultIIR = 0;
+    baseline = 0;
+    resultBufPtr = 0;
+    dbgRecMinDeltaIndex = UINT16_MAX;
+    dbgRecMaxDeltaIndex = 0;
+    for(i = 0; i < APP_SPRAY_WC_RESULT_BUF_SIZE; i++)
+    {
+        resultBuf[i] = 0;
     }
 }
 

@@ -32,10 +32,11 @@
 #include "..\bsp\common.h"
 
 
-static BSP_HSI_CFG_t hsiCfg = BSP_HSI_CFG_16000kHz;
-static code uint8_t rctrim[] = {0, 25, 26, 27, 28, 29, 30, 31, 32, 33};
+//static xdata BSP_HSI_CFG_t hsiCfg = BSP_HSI_CFG_16000kHz;
+//static code uint8_t rctrim[] = {0, 25, 26, 27, 28, 29, 30, 31, 32, 33};
+static xdata uint8_t hsiCfg = 0;
 
-void bspClkInit(BSP_HSI_CFG_t bspHsiCfg)
+void bspClkInit(uint8_t bspHsiCfg)
 {
     uint8_t hircmap0,hircmap1;
     uint16_t trimvalue16bit;
@@ -53,7 +54,7 @@ void bspClkInit(BSP_HSI_CFG_t bspHsiCfg)
     hircmap1 = IAPFD;
     clr_IAPEN;
     trimvalue16bit = ((hircmap0<<1)+(hircmap1&0x01));
-    trimvalue16bit = trimvalue16bit - (uint16_t)rctrim[(uint8_t)bspHsiCfg];
+    trimvalue16bit = trimvalue16bit - bspHsiCfg;
     hircmap1 = trimvalue16bit&0x01;
     hircmap0 = trimvalue16bit>>1;
     TA=0XAA;
@@ -66,19 +67,19 @@ void bspClkInit(BSP_HSI_CFG_t bspHsiCfg)
     hsiCfg = bspHsiCfg;
 }
 
-BSP_HSI_CFG_t bspClkGetCfg(void)
+uint8_t bspClkGetCfg(void)
 {
     return hsiCfg;
 }
 
-//void bspClkOutEnable(void)
-//{
-//    //P11_PushPull_Mode;
-//    set_CLOEN;
-//}
-//void bspClkOutDisable(void)
-//{
-//    //P11_PushPull_Mode;
-//    clr_CLOEN;
-//}
+void bspClkOutEnable(void)
+{
+    P11_PushPull_Mode;
+    set_CLOEN;
+}
+void bspClkOutDisable(void)
+{
+    P11_PushPull_Mode;
+    clr_CLOEN;
+}
 

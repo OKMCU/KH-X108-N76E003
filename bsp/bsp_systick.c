@@ -40,6 +40,7 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+/*
 static code uint16_t reloadValue_1ms[] = {
     65536 - 16000,
     65536 - 17000,
@@ -52,6 +53,7 @@ static code uint16_t reloadValue_1ms[] = {
     65536 - 17280,
     65536 - 17320
 };
+*/
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 /* Public functions ----------------------------------------------------------*/
@@ -64,15 +66,17 @@ static code uint16_t reloadValue_1ms[] = {
   */
 void bspSystickInit(void)
 {
-    BSP_HSI_CFG_t bspHsiCfg;
+    uint8_t bspHsiCfg;
+    uint16_t reloadValue_1ms = UINT16_MAX-16000+1;
     
     TIMER2_DIV_1;
     TIMER2_Auto_Reload_Delay_Mode;
 
     bspHsiCfg = bspClkGetCfg();
-    
-    RCMP2L = reloadValue_1ms[bspHsiCfg];
-    RCMP2H = reloadValue_1ms[bspHsiCfg]>>8;
+
+    reloadValue_1ms -= (uint16_t)bspHsiCfg*40;
+    RCMP2L = (uint8_t)(reloadValue_1ms & 0xFF);
+    RCMP2H = (uint8_t)(reloadValue_1ms >> 8);
     TL2 = 0;
     TH2 = 0;
 
@@ -83,19 +87,30 @@ void bspSystickInit(void)
 
 void bspSystickUpdate(void)
 {
-    BSP_HSI_CFG_t bspHsiCfg;
-
+    uint8_t bspHsiCfg;
+    uint16_t th2;
+    uint16_t reloadValue_1ms = UINT16_MAX-16000+1;
+    
     clr_ET2;
     clr_TR2;
     
     bspHsiCfg = bspClkGetCfg();
 
-    RCMP2L = reloadValue_1ms[bspHsiCfg];
-    RCMP2H = reloadValue_1ms[bspHsiCfg]>>8;
+    reloadValue_1ms -= (uint16_t)bspHsiCfg*40;
+    RCMP2L = (uint8_t)(reloadValue_1ms & 0xFF);
+    RCMP2H = (uint8_t)(reloadValue_1ms >> 8);
 
-    TL2 = 0;
-    TH2 = 0;
-
+    th2 = (uint16_t)TH2;
+    th2 <<= 8;
+    th2 += (uint16_t)TL2;
+    
+    if(th2 >= reloadValue_1ms)
+    {
+        th2 = reloadValue_1ms - 1;
+        TH2 = (th2 >> 8) & 0xFF;
+        TL2 = th2 & 0xFF;
+    }
+    
     set_ET2;
     set_TR2;
 }

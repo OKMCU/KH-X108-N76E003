@@ -39,28 +39,24 @@
 
 extern void halFreqHopSet(uint8_t freq_lvl)
 {
-    BSP_HSI_CFG_t bspHsiCfg;
+    uint8_t bspHsiCfg;
     
-    if(freq_lvl >= (uint8_t)BSP_HSI_CFG_17000kHz ||
-       freq_lvl <= (uint8_t)BSP_HSI_CFG_17320kHz)
+    bspHsiCfg = bspClkGetCfg();
+    if(bspHsiCfg != freq_lvl)
     {
-        bspHsiCfg = bspClkGetCfg();
-        if(bspHsiCfg != (BSP_HSI_CFG_t)freq_lvl)
-        {
-            bspClkInit((BSP_HSI_CFG_t)freq_lvl);
-            bspSystickUpdate();
+        bspClkInit(freq_lvl);
+        bspSystickUpdate();
 #if BSP_UART_EN > 0
-            bspUart0Update_Timer3(9600);
+        bspUart0Update_Timer3(9600);
 #endif /* BSP_UART_EN > 0 */
-        }
     }
 }
 
 extern uint8_t halFreqHopGet(void)
 {
-    BSP_HSI_CFG_t bspHsiCfg;
+    uint8_t bspHsiCfg;
     bspHsiCfg = bspClkGetCfg();
-    return (uint8_t)bspHsiCfg;
+    return bspHsiCfg;
 }
 
 #endif /* HAL_FREQHOP_EN > 0 */

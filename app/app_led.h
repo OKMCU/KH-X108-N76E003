@@ -38,7 +38,7 @@
 #if APP_LED_EN > 0
 /* Exported types ------------------------------------------------------------*/
 typedef enum {
-    LED_FUNC = 0,
+    LED_MIST = 0,
     LED_R = 1,
     LED_G = 2,
     LED_B = 3

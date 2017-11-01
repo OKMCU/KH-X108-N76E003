@@ -477,6 +477,7 @@
 #define PWM_CLOCK_FSYS                      CKCON&=0xBF
 #define PWM_CLOCK_TIMER1                    CKCON|=0x40
 //--------- PWM clock devide define ----------------------------
+#define PWM_CLOCK_DIV_1                     PWMCON1|=0x00;PWMCON1&=0xF8
 #define PWM_CLOCK_DIV_2                     PWMCON1|=0x01;PWMCON1&=0xF9
 #define PWM_CLOCK_DIV_4                     PWMCON1|=0x02;PWMCON1&=0xFA
 #define PWM_CLOCK_DIV_8                     PWMCON1|=0x03;PWMCON1&=0xFB

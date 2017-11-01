@@ -1,10 +1,10 @@
 /**
   ******************************************************************************
-  * @file    app_buzzer.h
+  * @file    hal_light.h
   * @author  SUN Wentao
   * @version V0.0.1
-  * @date    08-OCT-2017
-  * @brief   This file contains the APIs of tri-color LED control.
+  * @date    14-OCT-2017
+  * @brief   
    ******************************************************************************
   * @attention
   *
@@ -25,29 +25,24 @@
   ******************************************************************************
   */ 
 
-/* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __APP_BUZZER_H
-#define __APP_BUZZER_H
+#ifndef __HAL_LIGHT_H__
+#define __HAL_LIGHT_H__
 
-/* Includes ------------------------------------------------------------------*/
-#include "firmware_conf.h"
+#include "..\bsp\stdint.h"
 #include "..\bsp\typedef.h"
+#include "firmware_conf.h"
 
-#if APP_BUZZER_EN > 0
-/* Exported types ------------------------------------------------------------*/
+#if HAL_LIGHT_EN > 0
 typedef enum {
-    APP_BUZZ_BUTTON = 0,
-    APP_BUZZ_ERROR,
-    APP_BUZZ_FACTORY
-} APP_BUZZ_SOUND_t;
-/* Exported constants --------------------------------------------------------*/
-/* Exported macro ------------------------------------------------------------*/
-/* Exported functions ------------------------------------------------------- */
-void appBuzzerInit(void);
-bool appBuzzerBeep(APP_BUZZ_SOUND_t beep);
-#endif /* APP_BUZZER_EN */
+    HAL_LIGHT_R = 0,
+    HAL_LIGHT_G,
+    HAL_LIGHT_B
+} HAL_LIGHT_t;
 
-#endif /* __APP_BUZZER_H */
+extern void halLightInit(void);
+extern void halLightSet(HAL_LIGHT_t light, uint8_t bright);
+extern void halLightUpdate(void);
+#endif /* HAL_LIGHT_EN > 0 */
 
+#endif /* __HAL_LIGHT_H__ */
 
-/************************ (C) COPYRIGHT OKMCU *****END OF FILE****/
