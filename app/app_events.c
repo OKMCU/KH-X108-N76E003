@@ -42,6 +42,8 @@
 #if APP_EVENTS_EN > 0
 
 /* Private typedef -----------------------------------------------------------*/
+#define APP_EVT_SprayHighPwrOnTime     (uint8_t)5  //in ms
+#define APP_EVT_SprayHighPwrOffTime   (uint8_t)16  //in ms
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -50,6 +52,11 @@ static xdata uint16_t blinkCnt = 0;
 static xdata uint16_t blinkPeriod = 0;
 static xdata int8_t blinkTid = -1;
 static xdata uint8_t porButtonState = 0;
+static code  APP_SPRAY_PROFILE_t sprayProfile[3] = {
+    {0, 0, 0},  //spray always off
+	{1, 0, 0},  //spray always on
+    {1, 0, 0},  //spray always on
+};
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 static void appEvent_InCaseErrorBeepFailed(void)
@@ -86,7 +93,6 @@ static void appEvent_IndicateError(uint8_t cnt, uint16_t period)
     }
 }
 /* Public functions ----------------------------------------------------------*/
-
 void appEventPowerOnReset(void)
 {
     porButtonState = appButtonGetCurrentState();
@@ -97,20 +103,21 @@ void appEventPowerOnReset(void)
     {
         appBuzzerBeep(APP_BUZZ_ERROR);
     }
+
+    appSpraySetPower(APP_EVT_SprayHighPwrOnTime, APP_EVT_SprayHighPwrOffTime);
 }
 void appEventMistButtonPress(void)
 {
     if(blinkTid >= 0)
         return;
-    
+    porButtonState = 0;
     mistButtonCnt++;
-    if(mistButtonCnt == 1)
+    if(mistButtonCnt == 1)//trun on spray
     {
         appLedOn(LED_MIST);
         appLightSetMode(0);
-        appSprayOn();
     }
-    else if(mistButtonCnt == 2)
+    else if(mistButtonCnt == 2)//turn on light
     {
         appLedOn(LED_MIST);
         appLightSetMode(1);
@@ -120,8 +127,8 @@ void appEventMistButtonPress(void)
         mistButtonCnt = 0;
         appLedOff(LED_MIST);
         appLightSetMode(0);
-        appSprayOff();
     }
+	appSpraySet(&sprayProfile[mistButtonCnt]);
 }
 void appEventMistButtonTouchEnter(void)
 {
@@ -140,6 +147,10 @@ void appEventMistButtonLongPress(void)
         appFreqHop_SetEnable();
         appSprayResetWaterChkData();
     }
+    else
+    {
+
+    }
 }
 void appEventLightMistButtonVLongPress(void)
 {
@@ -155,7 +166,7 @@ void appEventFreqHopCfm(void)
     appFreqHop_SaveFreqToFlash();
     mistButtonCnt = 0;
     appLightSetMode(8);//white
-    appSprayOff();
+    appSpraySet(&sprayProfile[mistButtonCnt]);
     appBuzzerBeep(APP_BUZZ_FACTORY);
     appLedOn(LED_MIST);
 }
@@ -164,7 +175,7 @@ void appEventNoWater(void)
 {
     mistButtonCnt = 0;
     appLightSetMode(0);
-    appSprayOff();
+    appSpraySet(&sprayProfile[mistButtonCnt]);
     appTaskSchedCreate(500, appEvent_InCaseErrorBeepFailed);
     appEvent_IndicateError(3, 600);
 }

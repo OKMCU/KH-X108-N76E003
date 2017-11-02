@@ -245,7 +245,6 @@ void appLightSetMode(uint8_t lightMode)
             curColor.green = colorTableVar[curColorId].green;
             curColor.blue = colorTableVar[curColorId].blue;
             appLightSet(&curColor);
-            //appLightUpdateColorStart();
             updColorStartTid = appTaskSchedCreate(colorTableVarTime[curColorId], appLightUpdateColorStart);
         }
         else//lightMode == 2

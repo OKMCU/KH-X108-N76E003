@@ -35,14 +35,20 @@
 
 #if APP_SPRAY_EN > 0
 /* Exported types ------------------------------------------------------------*/
+typedef struct {
+    
+    uint8_t onPeriodInSec;
+    uint8_t offPeriodInSec;
+    uint16_t totalTimeInMin;
+    
+} APP_SPRAY_PROFILE_t;
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
 extern void    appSprayInit (void);
-extern void    appSprayOn   (void);
-extern void    appSprayOff  (void);
 extern void    appSprayResetWaterChkData(void);
-//extern void    appSprayGetResult(uint16_t *iir, uint16_t *iirMax, uint16_t *iirMin);
+extern void    appSpraySet(const APP_SPRAY_PROFILE_t *profile);
+extern void    appSpraySetPower(uint8_t on_time_ms, uint8_t off_time_ms);
 #endif /* APP_SPRAY_EN > 0 */
 
 

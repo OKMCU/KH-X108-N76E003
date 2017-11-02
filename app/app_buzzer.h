@@ -38,7 +38,9 @@
 typedef enum {
     APP_BUZZ_BUTTON = 0,
     APP_BUZZ_ERROR,
-    APP_BUZZ_FACTORY
+    APP_BUZZ_FACTORY,
+    APP_BUZZ_HIGHPOWER,
+    APP_BUZZ_LOWPOWER
 } APP_BUZZ_SOUND_t;
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/

@@ -60,14 +60,12 @@ static void appBuzzerSoundFactory(void)
 
     if(cnt == 0)
     {
-        //GPIOD->ODR |= (uint8_t)GPIO_PIN_4;
         BEEP_Cmd(TRUE);
         beepTid = appTaskSchedCreate(FACTORY_BEEP_LAST, appBuzzerSoundFactory);
         cnt++;
     }
     else if(cnt == 1)
     {
-        //GPIOD->ODR &= (uint8_t)(~GPIO_PIN_4);
         BEEP_Cmd(FALSE);
         beepTid = -1;
         cnt = 0;
@@ -80,14 +78,12 @@ static void appBuzzerSoundButton(void)
 
     if(cnt == 0)
     {
-        //GPIOD->ODR |= (uint8_t)GPIO_PIN_4;
         BEEP_Cmd(TRUE);
         beepTid = appTaskSchedCreate(SINGLE_BEEP_LAST, appBuzzerSoundButton);
         cnt++;
     }
     else if(cnt == 1)
     {
-        //GPIOD->ODR &= (uint8_t)(~GPIO_PIN_4);
         BEEP_Cmd(FALSE);
         beepTid = -1;
         cnt = 0;
@@ -100,28 +96,48 @@ static void appBuzzerSoundError(void)
 
     if(cnt == 0 || cnt == 2 || cnt == 4 || cnt== 6)
     {
-        //GPIOD->ODR |= (uint8_t)GPIO_PIN_4;
         BEEP_Cmd(TRUE);
         beepTid = appTaskSchedCreate(SINGLE_BEEP_LAST, appBuzzerSoundError);
         cnt++;
     }
     else if(cnt == 1 || cnt== 5)
     {
-        //GPIOD->ODR &= (uint8_t)(~GPIO_PIN_4);
         BEEP_Cmd(FALSE);
         beepTid = appTaskSchedCreate(DOUBLE_BEEP_INTERVAL, appBuzzerSoundError);
         cnt++;
     }
     else if(cnt == 3)
     {
-        //GPIOD->ODR &= (uint8_t)(~GPIO_PIN_4);
         BEEP_Cmd(FALSE);
         beepTid = appTaskSchedCreate(ERROR_BEEP_INTERVAL, appBuzzerSoundError);
         cnt++;
     }
     else if(cnt == 7)
     {
-        //GPIOD->ODR &= (uint8_t)(~GPIO_PIN_4);
+        BEEP_Cmd(FALSE);
+        beepTid = -1;
+        cnt = 0;
+    }
+}
+
+static void appBuzzerSoundLowPower(void)
+{
+    static xdata uint8_t cnt = 0;
+
+    if(cnt == 0 || cnt == 2)
+    {
+        BEEP_Cmd(TRUE);
+        beepTid = appTaskSchedCreate(SINGLE_BEEP_LAST, appBuzzerSoundLowPower);
+        cnt++;
+    }
+    else if(cnt == 1)
+    {
+        BEEP_Cmd(FALSE);
+        beepTid = appTaskSchedCreate(DOUBLE_BEEP_INTERVAL, appBuzzerSoundLowPower);
+        cnt++;
+    }
+    else if(cnt == 3)
+    {
         BEEP_Cmd(FALSE);
         beepTid = -1;
         cnt = 0;
@@ -144,13 +160,17 @@ bool appBuzzerBeep(APP_BUZZ_SOUND_t beep)
 {
     if(beepTid < 0)
     {
-        if(beep == APP_BUZZ_BUTTON)
+        if(beep == APP_BUZZ_BUTTON || beep == APP_BUZZ_HIGHPOWER)
         {
             beepTid = appTaskSchedCreate(SINGLE_BEEP_LAST, appBuzzerSoundButton);
         }
         else  if(beep == APP_BUZZ_ERROR)
         {
             beepTid = appTaskSchedCreate(SINGLE_BEEP_LAST, appBuzzerSoundError);
+        }
+        else if(beep == APP_BUZZ_LOWPOWER)
+        {
+            beepTid = appTaskSchedCreate(SINGLE_BEEP_LAST, appBuzzerSoundLowPower);
         }
         else
         {
