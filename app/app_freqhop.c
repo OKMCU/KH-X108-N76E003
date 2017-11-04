@@ -54,7 +54,7 @@
 #define APP_SPRAY_FHOP_TARGET_VOLTAGE   (uint16_t)2457  //target working voltage
 #define APP_SPRAY_FHOP_CFM_CNT          (uint8_t)3
 #define APP_SPRAY_FHOP_AVG_DLY_CFM_CNT  (uint16_t)100   //if it can working stably for 1500 groups of pulses (about 30 sec), confirm it is stable and confirm the average value recored @No.200 pulses. 
-#define APP_SPRAY_FHOP_FREQ_LVL_DEF     (uint8_t)29     //default frequency
+#define APP_SPRAY_FHOP_FREQ_LVL_DEF     (uint8_t)24     //default frequency
 #define APP_SPRAY_FHOP_FREQ_LVL_MIN     (uint8_t)8      //lowest frequency to try
 #define APP_SPRAY_FHOP_FREQ_LVL_MAX     (uint8_t)55     //highest frequency to try
 #define APP_SPRAY_FHOP_FREQ_LVL_CNT     (uint8_t)(APP_SPRAY_FHOP_FREQ_LVL_MAX-APP_SPRAY_FHOP_FREQ_LVL_MIN+1)
@@ -102,7 +102,7 @@ extern void appFreqHop_Init(void)
     uint8_t freq = 0xFF;
     
     halFlashRead(&freq, sizeof(uint8_t));
-    if(freq == 0xFF || fhopEnableFlag == TRUE)
+    if(freq < APP_SPRAY_FHOP_FREQ_LVL_MIN || freq > APP_SPRAY_FHOP_FREQ_LVL_MAX || fhopEnableFlag == TRUE)
         freq = APP_SPRAY_FHOP_FREQ_LVL_DEF;
     halFreqHopSet(freq);
 }
