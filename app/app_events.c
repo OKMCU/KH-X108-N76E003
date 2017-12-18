@@ -43,7 +43,7 @@
 
 /* Private typedef -----------------------------------------------------------*/
 #define APP_EVT_SprayHighPwrOnTime     (uint8_t)5  //in ms
-#define APP_EVT_SprayHighPwrOffTime   (uint8_t)13  //in ms
+#define APP_EVT_SprayHighPwrOffTime   (uint8_t)15  //in ms
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
